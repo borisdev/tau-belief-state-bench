@@ -97,11 +97,36 @@ prompt-fix vs **training-data-fix** split tells you *which lever* — the latter
 data an AI lab actually needs. **Intermediate representations are simultaneously the unit of audit and
 the unit of supervision.**
 
+## Repository map (everything, one click away)
+
+**Start here**
+- [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md) — the one worked example (task 47): verbatim runtime objects, turn-by-turn belief table, the 3-currency value.
+
+**Design**
+- [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md) — the white paper (the gap, the `AgentProblemBeliefState` schema, metrics, integration).
+
+**Results & evidence**
+- [`poc/FINDINGS.md`](poc/FINDINGS.md) — verified failure-pattern table + the automated verifier + glossary.
+- [`poc/FINDINGS_raw_analyst.md`](poc/FINDINGS_raw_analyst.md) — the raw, **unverified** analyst draft (kept for transparency).
+- [`poc/traces/`](poc/traces/) — readable per-task transcripts · raw data: [`trajectories.json`](poc/trajectories.json), [`analysis.json`](poc/analysis.json), [`verified_findings.json`](poc/verified_findings.json).
+
+**Code — PoC pipeline**
+- [`poc/run_airline.py`](poc/run_airline.py) (Haiku vs Sonnet on real τ³ airline tools) → [`poc/analyze_beliefs.py`](poc/analyze_beliefs.py) (belief extractor) → [`poc/verify_findings.py`](poc/verify_findings.py) (deterministic evidence-grounding verifier) → [`poc/render_traces.py`](poc/render_traces.py).
+
+**The refactor — in progress**
+- **[Issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1)** — the structured `ProblemSpec` proposal.
+- **Branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-belief-state-bench/tree/feat/structured-problemspec)** — first working code: [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py), [`constraint_evaluator.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/evaluator/constraint_evaluator.py), [`constraint_eval_demo.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/poc/constraint_eval_demo.py) — **flips task 47 `PASS → FAIL`.**
+
+**Provenance / license**
+- [`VENDOR.md`](VENDOR.md) — what was trimmed from upstream + the source commit · [`LICENSE`](LICENSE) (MIT, Sierra Research) · [`README_upstream_tau3.md`](README_upstream_tau3.md) — the original τ³ README.
+
+---
+
 ## Status / honest caveats
 
 - Thin slice: 6 tasks, 1 agent model, airline only; belief extracted at ~3 points/task (not yet every turn).
 - No numeric convergence curve yet (needs a slotted `TrueProblemSpec` + per-turn belief precision/recall).
 - All grades verified against τ³'s real `reward_basis` + ground-truth actions: 35/24/43 are real wrongful cancellations (GT = cancel nothing); 47 is a verified `pass`; **39 is a verified clean pass — its original "defect" was a first-pass analyst hallucination, now removed** (see integrity note).
 - **The first-pass LLM analyst is not trustworthy un-verified** — it got 2/4 rows wrong. The verified table is hand-checked against evidence; automating that verification is itself part of the roadmap.
-- **Next (code):** the structured `ProblemSpec` refactor + a `ConstraintEvaluator` that flips task 47 to `fail` — [issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1), to be built on a `feat/structured-problemspec` branch.
+- **In progress (code):** the structured `ProblemSpec` refactor + a `ConstraintEvaluator` — first slice is live on branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-belief-state-bench/tree/feat/structured-problemspec) ([issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1)) and **already flips task 47 `PASS → FAIL`.** Next: wire it into the live user-sim + evaluator, then the convergence curve.
 - **Round 2 (scale):** banking `task_091` (four PIN-locked cards), strong-vs-weak model contrast, full per-turn serialization → real convergence curve.
