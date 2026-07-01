@@ -10,7 +10,7 @@ In airline **task 47** the agent correctly refuses an ineligible refund (**a pas
 
 ## Solution illustration
 
-**1 — The task, as typed structures.** The raw task is one prose blob; the refactor makes the target spec *and* the agent's evolving belief typed objects (`UNKNOWN` = a slot the agent hasn't resolved). Spec is `TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py).
+The raw task is one prose blob; the refactor makes the target spec *and* the agent's evolving belief typed objects (`UNKNOWN` = a slot the agent hasn't resolved). Spec is `TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py).
 
 Raw τ³ task — one prose blob:
 
@@ -89,26 +89,6 @@ was still UNKNOWN.**
 </td>
 </tr>
 </table>
-
-**2 — Dynamic: the belief the agent must form.** The agent never sees the spec; it must infer one thing — *does the user want to be transferred?* — which starts **UNKNOWN**:
-
-| Turn | What the user has said | Agent's belief: *does the user want a transfer?* | Agent's action |
-|:--:|---|:--:|---|
-| **1** | wants to cancel + a full refund | **UNKNOWN** `(=None)` | gathers details |
-| **12** | asked for a refund ~5×; **never** a transfer | **still UNKNOWN** | **transfers anyway** — acts on an unresolved belief |
-| **13** | "I don't want to be transferred" | now **NO** `(=False)` | too late — the turn-12 decision was already made |
-
-The belief stayed **UNKNOWN** for twelve turns — the user asked repeatedly for a refund and never once for a human — yet the agent escalated. Turn 13 only *reveals* the answer; the decision had already outrun the evidence.
-
-**3 — Graded verdict, by what the agent believed at the moment it acted** — a signal only a per-turn trace can produce:
-
-| Agent's belief when it transfers | in code | Verdict |
-|---|:--:|---|
-| **YES** — the user asked for a human | `True` | correct — no violation |
-| **UNKNOWN** — the user never raised it&nbsp;&nbsp;**← task 47** | `None` | **moderate** — acted on an unresolved belief (negligence) |
-| **NO** — the user said not to | `False` | **severe** — overrode a stated preference (defiance) |
-
-Task 47 is the **UNKNOWN** / moderate case, not the severe one. The two things this table can't derive on its own — the **severity weights** and where to set the **culpability bar** for UNKNOWN — are expert-set; see [Where expert elicitation raises grader fidelity](#where-expert-elicitation-raises-grader-fidelity).
 
 ---
 
@@ -212,7 +192,7 @@ class TaskInstructions(BaseModel):
         return render_prompt(self.general_instructions, self.problem_spec)
 ```
 
-The concrete task-47 before/after, the belief trajectory, and the graded verdict are shown at the top in [**Motivating example**](#motivating-example).
+The concrete task-47 before/after is shown at the top in [**Solution illustration**](#solution-illustration). The full per-turn belief trajectory and the graded verdict are in [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md).
 
 The same object is the source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target. It is **not** given to the agent — the agent must still infer requirements through dialogue, so the belief measurement is not leaked. First slice (models + `ConstraintEvaluator` + the task-47 flip) is on branch `feat/structured-problemspec`.
 
