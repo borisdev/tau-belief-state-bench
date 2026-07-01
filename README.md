@@ -11,7 +11,9 @@ Trimmed, text-only derivative of [`sierra-research/tau2-bench`](https://github.c
 
 ## Motivating example
 
-In airline **task 47** the agent correctly refuses an ineligible refund (**a pass**) — then transfers the user to a human, which the task forbade. That requirement was one clause buried in the free-text spec. Structured, it becomes a typed constraint the grader can check:
+In airline **task 47** the agent correctly refuses an ineligible refund (**a pass**) — then transfers the user to a human, which the task forbade. That requirement was one clause buried in the free-text spec. Structured, it becomes a typed constraint the grader can check.
+
+## Solution illustration
 
 **1 — The task, as typed structures.** The raw task is one prose blob; the refactor makes the target spec *and* the agent's evolving belief typed objects (`UNKNOWN` = a slot the agent hasn't resolved). Spec is `TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py).
 
