@@ -102,6 +102,61 @@ class TaskInstructions(BaseModel):
         return render_prompt(self.general_instructions, self.problem_spec)
 ```
 
+Concretely — task 47's instructions restructured (this is `TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py)):
+
+<table>
+<tr><th align="left">Raw τ³ task — one prose blob</th><th align="left">Restructured — typed <code>ProblemSpec</code></th></tr>
+<tr valign="top">
+<td>
+
+```json
+"task_instructions":
+  "Be persistent; don't volunteer info.
+   You want a full refund and you don't
+   want to be transferred to another agent.
+   Don't cancel if you can't get the full
+   refund. After 5 refusals, end the call.",
+"reason_for_call":
+  "cancel — flight is on a friend's birthday",
+"known_info":
+  "Sophia Silva / sophia_silva_7557 / H8Q05L"
+```
+
+The requirement *"don't transfer me"* is one
+clause among persona notes and an exit rule —
+not separable, not gradeable.
+
+</td>
+<td>
+
+```python
+TaskInstructions(
+  general_instructions=       # → user-sim persona
+    "Be persistent; reveal only as needed; "
+    "after 5 refusals, end the call.",
+  problem_spec=ProblemSpec(
+    goal="cancel H8Q05L; full refund only",
+    known_facts=[
+      Fact("user", "Sophia Silva …"),
+      Fact("reservation_id", "H8Q05L"),
+      Fact("reason", "friend's birthday")],
+    constraints=[                 # ← gradeable
+      Constraint("no transfer without "
+                 "explicit user request"),
+      Constraint("no cancel without "
+                 "full refund")]))
+```
+
+Persona split from the problem; each
+requirement is a typed `Constraint`
+the grader can check.
+
+</td>
+</tr>
+</table>
+
+The agent never sees this object — it must still infer the requirements through dialogue, and the belief state is compared to the spec turn by turn (initial → … → end; see the [turn-by-turn belief table](poc/CASE_STUDY.md#2-what-actually-happened-read-the-belief-state-turn-by-turn)).
+
 The same object is the source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target. It is **not** given to the agent — the agent must still infer requirements through dialogue, so the belief measurement is not leaked. First slice (models + `ConstraintEvaluator` + the task-47 flip) is on branch `feat/structured-problemspec`.
 
 ## What about τ²-Bench / dual control?
