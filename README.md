@@ -1,6 +1,6 @@
 # tau-belief-state-bench
 
-*Does the agent get on the same page with the user before acting?*
+*How well does the agent get on the same page with the user?*
 
 ## What is this about?
 
