@@ -1,6 +1,6 @@
 # tau-belief-state-bench
 
-**Process supervision for τ-bench** — grade the agent's *belief state* (its evolving estimate of the user's latent problem), not just the terminal world state the benchmark scores today.
+**Process supervision for τ-bench.**
 
 ---
 
