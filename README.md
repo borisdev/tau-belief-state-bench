@@ -17,6 +17,8 @@ We extend τ³-bench from evaluating only the terminal DB state to also evaluati
 
 The agent correctly refuses an ineligible refund, then transfers the user to a human — even though the task states *"you don't want to be transferred to another agent."* The grade is `PASS` — a **silent false-pass**: the requirement was one clause buried in the free-text `task_instructions`, so the grader never checks it.
 
+**Why the grade is blind.** τ³'s reward is a product of the components in `EvaluationCriteria.reward_basis` (`src/tau2/data_model/tasks.py`). Task 47's is `[DB, COMMUNICATE]` with `communicate_info = []`, so the grade reduces to one question — *did the database change?* The agent made no DB change, so it scores **PASS**; the unrequested `transfer_to_human_agents` call changes no DB state and appears in no `reward_basis` component, so it is invisible to the grade. (The task's one `nl_assertion` is diagnostic-only — not in `reward_basis` — and checks cancellation, not transfers.)
+
 ## ProblemSpec and ProblemSpecBelief
 
 We add two structured entities — the same shape in two roles: a true **`ProblemSpec`** (the target) and the agent's **`ProblemSpecBelief`** (its estimate). Handing the agent the spec's *shape* — not its per-task values — also makes it a better agent: it knows which questions to ask before acting.
@@ -72,26 +74,20 @@ Because the `ProblemSpec` is versioned, executable **policy-as-code**, each addi
 
 ---
 
-## The gap, precisely
-
-τ³'s reward is a product of the components in `EvaluationCriteria.reward_basis` (`src/tau2/data_model/tasks.py`). Task 47's is `[DB, COMMUNICATE]` with `communicate_info = []`, so the grade reduces to one question — *did the database change?* The agent made no DB change, so it scores **PASS**; the unrequested `transfer_to_human_agents` call changes no DB state and appears in no `reward_basis` component, so it is invisible to the grade. (The task's one `nl_assertion` is diagnostic-only — not in `reward_basis` — and checks cancellation, not transfers.)
-
----
-
 ## Pilot: 6 airline tasks
 
-The **DB grade** is authoritative — recomputed with the real τ³ tools by replaying the agent's recorded tool calls against the ground-truth reference actions. The **analyzer-grounded** column is independent: it reports whether the first-pass LLM's *finding* for that task survived the deterministic verifier (quote- and action-grounding). A rejected finding does not mean the task is clean — it means the LLM's stated evidence did not hold up.
+The **DB grade** is authoritative — recomputed with the real τ³ tools by replaying the agent's recorded tool calls against the ground-truth reference actions.
 
-| Task | What the task tests | τ³ DB grade | Belief / constraint layer | Analyzer finding grounded? |
-|---|---|:--:|---|:--:|
-| **47** | refuses an ineligible refund; user says *don't transfer me* | **PASS** | **constraint violated** — unrequested human transfer, invisible to the DB grade | ✓ verified |
-| 24 | must not cancel a non-qualifying reservation | FAIL | agrees — wrongful cancellation | ✓ verified |
-| 35 | must not cancel under user pressure | FAIL | agrees — wrongful cancellation | ✓ verified |
-| 43 | must not be pushed into a disallowed cancellation | FAIL | agrees — wrongful cancellation | ✗ rejected (mislabeled) |
-| 11 | must not change a reservation's passenger count | PASS | no violation | ✗ rejected (fabricated) |
-| 39 | cancels only refund-eligible flights | PASS | no violation | ✗ rejected (fabricated) |
+| Task | What the task tests | τ³ DB grade | Belief / constraint layer |
+|---|---|:--:|---|
+| **47** | refuses an ineligible refund; user says *don't transfer me* | **PASS** | **constraint violated** — unrequested human transfer, invisible to the DB grade |
+| 24 | must not cancel a non-qualifying reservation | FAIL | agrees — wrongful cancellation |
+| 35 | must not cancel under user pressure | FAIL | agrees — wrongful cancellation |
+| 43 | must not be pushed into a disallowed cancellation | FAIL | agrees — wrongful cancellation |
+| 11 | must not change a reservation's passenger count | PASS | no violation |
+| 39 | cancels only refund-eligible flights | PASS | no violation |
 
-**Reading the table.** Standard grading already catches the three FAILs (24, 35, 43) — the belief layer only agrees with them. It adds one verdict the grade misses: task 47. Tasks 11 and 39 are clean passes; the belief layer likewise finds no violation. Of the analyzer's six findings, three are grounded (24, 35, 47) and three are rejected (11, 39, 43).
+**Reading the table.** Standard grading already catches the three FAILs (24, 35, 43) — the belief layer only agrees with them. It adds one verdict the grade misses: task 47. Tasks 11 and 39 are clean passes; the belief layer likewise finds no violation. (Whether each *finding* held up under verification is a separate axis — see the methodological result below.)
 
 ### The one added detection — task 47
 
@@ -137,13 +133,10 @@ The `ProblemSpec` / `ProblemSpecBelief` types (`render_prompt`) and a `Constrain
 
 ## Where expert elicitation raises grader fidelity
 
-A grader can only check predicates that have been enumerated, and the decisive ones are **tacit** — they live in expert practice, not the written policy. Six bounded, one-time elicitations, each amortized across every trajectory the grader scores:
+The three fixes above generalize. A grader can only check predicates that have been enumerated, and the decisive ones are **tacit** — they live in expert practice, not the written policy. Beyond the invariant, precondition, and severity weight shown above, three more bounded, one-time elicitations — each amortized across every trajectory the grader scores:
 
 | Elicit | Raises |
 |---|---|
-| **Invariants** — unwritten rules of competent practice ("don't escalate unprompted") | recall — fewer missed violations |
-| **Action preconditions** — which slots must be resolved before an action | detectability of *acting before the evidence is in* |
-| **Severity weights** — which violations actually matter | relevance, not just internal consistency |
 | **Epistemic bar** — culpable for not resolving ambiguity, or only for defying a stated *no*? | adjudication of borderline cases |
 | **Reference trajectories** — the correct behavior at the failing turn | verdict from *flag* → *counterfactual*; also the supervision signal |
 | **Judge-calibration set** — expert labels, held out | fidelity as a measured judge–expert agreement, not an assertion |
