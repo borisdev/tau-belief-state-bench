@@ -72,6 +72,18 @@ These are the **`UNKNOWN`-slot mechanics** made concrete — which slots must be
 
 Because the `ProblemSpec` is versioned, executable **policy-as-code**, each addition is an auditable record of what *correct* means as policy evolves.
 
+## Where expert elicitation raises grader fidelity
+
+The three fixes above generalize. A grader can only check predicates that have been enumerated, and the decisive ones are **tacit** — they live in expert practice, not the written policy. Beyond the invariant, precondition, and severity weight shown above, three more bounded, one-time elicitations — each amortized across every trajectory the grader scores:
+
+| Elicit | Raises |
+|---|---|
+| **Epistemic bar** — culpable for not resolving ambiguity, or only for defying a stated *no*? | adjudication of borderline cases |
+| **Reference trajectories** — the correct behavior at the failing turn | verdict from *flag* → *counterfactual*; also the supervision signal |
+| **Judge-calibration set** — expert labels, held out | fidelity as a measured judge–expert agreement, not an assertion |
+
+The grader is only as good as the ontology it compiles — and the ontology is precisely the part that isn't written down. Expanded in [`PROBLEM_BELIEF_SPEC.md` §8](PROBLEM_BELIEF_SPEC.md).
+
 ---
 
 ## Pilot: 6 airline tasks
@@ -130,18 +142,6 @@ Reproduce: `run_airline.py` → `analyze_beliefs.py` → `verify_findings.py`.
 ## Implementation status (issue #1)
 
 The `ProblemSpec` / `ProblemSpecBelief` types (`render_prompt`) and a `ConstraintEvaluator` — the first slice that flips task 47 `PASS → FAIL` — are on branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-same-page-bench/tree/feat/structured-problemspec); the full field list and design are in [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md). The `ProblemSpec` is the shared source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target — but it is **not** given to the agent, so the belief measurement is not leaked. Tracked in [issue #1](https://github.com/borisdev/tau-same-page-bench/issues/1).
-
-## Where expert elicitation raises grader fidelity
-
-The three fixes above generalize. A grader can only check predicates that have been enumerated, and the decisive ones are **tacit** — they live in expert practice, not the written policy. Beyond the invariant, precondition, and severity weight shown above, three more bounded, one-time elicitations — each amortized across every trajectory the grader scores:
-
-| Elicit | Raises |
-|---|---|
-| **Epistemic bar** — culpable for not resolving ambiguity, or only for defying a stated *no*? | adjudication of borderline cases |
-| **Reference trajectories** — the correct behavior at the failing turn | verdict from *flag* → *counterfactual*; also the supervision signal |
-| **Judge-calibration set** — expert labels, held out | fidelity as a measured judge–expert agreement, not an assertion |
-
-The grader is only as good as the ontology it compiles — and the ontology is precisely the part that isn't written down. Expanded in [`PROBLEM_BELIEF_SPEC.md` §8](PROBLEM_BELIEF_SPEC.md).
 
 ## What about τ²-Bench / dual control?
 
