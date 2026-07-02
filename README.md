@@ -45,20 +45,17 @@ ProblemSpec(                                  # ground truth — the target
     Constraint("no cancel  unless refund_eligible")])
 ```
 
-**The agent never sees this spec — it must infer it.** The `ProblemSpecBelief` is that same spec as the agent estimates it; the slots its constraints depend on start `UNKNOWN`. Here it diverges — at the moment it acts (turn 12), the slot behind the *no-transfer* constraint is still `UNKNOWN`:
+**The agent never sees this spec — it must infer it.** The `ProblemSpecBelief` is the *same object* as the agent estimates it — identical fields, its slots `UNKNOWN` until resolved, plus a `turn`. It starts all-`UNKNOWN`; by the time it acts (turn 12) it has resolved `refund_eligible` but never `transfer_requested`:
 
 ```python
-ProblemSpecBelief(turn=1,        # same shape as the spec — nothing resolved yet
-  goal="cancel + refund",
-  transfer_requested=UNKNOWN,
-  refund_eligible=UNKNOWN,
-  constraints=[...])             # inferred; identical to the true spec
-
-ProblemSpecBelief(turn=12,       # refund now resolved; transfer never
-  goal="cancel + refund",
-  transfer_requested=UNKNOWN,    # ← still unresolved
-  refund_eligible=False,
-  constraints=[...])             # same
+ProblemSpecBelief(                            # the estimate — same shape, + turn
+  turn=12,
+  goal="cancel; refund-only",
+  transfer_requested=UNKNOWN,                 # ← never resolved (the bug)
+  refund_eligible=False,                       # resolved by turn 12
+  constraints=[
+    Constraint("no transfer unless transfer_requested"),
+    Constraint("no cancel  unless refund_eligible")])
 ```
 
 At turn 12 the agent calls `transfer_to_human_agents()` while `transfer_requested` is still `UNKNOWN` — it acts on an unresolved slot. That is the violation, and it's invisible to the DB grade. Full per-turn trajectory and graded verdict: [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md).
